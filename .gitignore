@@ -1,0 +1,46 @@
+# Python-generated files
+__pycache__/
+*.py[oc]
+build/
+dist/
+wheels/
+*.egg-info
+
+# Virtual environments
+.venv
+
+# Model weights & checkpoints
+weights/
+weight_Table/
+weight_fail_experiment/
+*.pt
+*.pth
+*.ckpt
+
+# Dataset
+data/
+
+# Output & logs
+output/
+*.log
+
+# PDFs & images
+*.pdf
+*.png
+*.jpg
+
+# LaTeX artifacts
+*.aux
+*.fdb_latexmk
+*.fls
+texput.log
+
+# UV lock
+uv.lock
+
+# Misc
+*.json
+*.zip
+memory.txt
+memory2.txt
+comment.txt
