@@ -70,8 +70,8 @@ def main():
         # Training
         'epochs': args.epochs,
         'batch_size': args.batch_size,
-        'learning_rate': 0.0001,
-        'lr': 0.0001,
+        'learning_rate': 0.00033,
+        'lr': 0.00033,
         'optimizer_type': 'adamw',
         'weight_decay': 0.0001,
         'gradient_clip': 0.5,
