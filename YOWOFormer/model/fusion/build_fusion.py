@@ -8,6 +8,7 @@ from .CBAM import CBAMFusion
 from .LKA import LKAFusion
 from .CrossAttention import CrossAttentionFusion
 from .CrossAttentionV2 import CrossAttentionFusionV2
+from .CrossAttentionParallel import CrossAttentionParallelFusion
 
 # major of Attention are adopted from https://viblo.asia/p/mot-chut-ve-co-che-attention-trong-computer-vision-x7Z4D622LnX
 def build_fusion_block(out_channels_2D, out_channels_3D, inter_channels_fusion, mode, fusion_block, lastdimension):
@@ -31,3 +32,5 @@ def build_fusion_block(out_channels_2D, out_channels_3D, inter_channels_fusion, 
         return CrossAttentionFusion(out_channels_2D, out_channels_3D, inter_channels_fusion, mode)
     elif fusion_block == 'CrossAttentionV2':
         return CrossAttentionFusionV2(out_channels_2D, out_channels_3D, inter_channels_fusion, mode)
+    elif fusion_block == 'CrossAttentionParallel':
+        return CrossAttentionParallelFusion(out_channels_2D, out_channels_3D, inter_channels_fusion, mode)
