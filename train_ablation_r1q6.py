@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
 """
-Ablation Study: R1-Q5 - Parallel BSTF vs Sequential BSTF
+Ablation Study: R1-Q6 - TAL top-k sensitivity on AVA
 Based on train_videomae_stable.py but with hardcoded config.
-Uses CrossAttentionParallel fusion instead of CrossAttention (sequential).
+Run twice: --top_k 5 and --top_k 15 (baseline is top_k=10)
 """
 
 import torch
@@ -34,29 +34,31 @@ from train_videomae_stable import VideoMAEYOWOTrainerStable, clear_gpu_memory
 
 def main():
     parser = argparse.ArgumentParser()
-    parser.add_argument('--dataset', type=str, default='ucf', choices=['ucf', 'ava'])
+    parser.add_argument('--top_k', type=int, required=True, choices=[5, 15],
+                        help='TAL top-k value (baseline=10, test 5 or 15)')
     parser.add_argument('--batch_size', type=int, default=16)
-    parser.add_argument('--num_workers', type=int, default=2)
+    parser.add_argument('--num_workers', type=int, default=4)
     parser.add_argument('--epochs', type=int, default=15)
     args = parser.parse_args()
 
     # ============================================================
-    # HARDCODED CONFIG - R1-Q5 Ablation: Parallel BSTF
+    # HARDCODED CONFIG - R1-Q6 Ablation: TAL top-k sensitivity
+    # AVA only (reviewer asked about multi-label)
     # ============================================================
     config = {
-        # Dataset
-        'dataset': args.dataset,
-        'data_root': f'data/{args.dataset.upper()}101-24' if args.dataset == 'ucf' else 'data/AVA_Dataset',
-        'num_classes': 24 if args.dataset == 'ucf' else 80,
+        # Dataset - AVA only
+        'dataset': 'ava',
+        'data_root': 'data/AVA_Dataset',
+        'num_classes': 80,
 
-        # Model
+        # Model - same as baseline
         'backbone2D': 'yolov11_n',
         'backbone3D': 'videomae',
-        'fusion_module': 'CrossAttentionParallel',  # <--- ABLATION: parallel BSTF
+        'fusion_module': 'CrossAttention',
         'mode': 'decoupled',
         'interchannels': [256, 256, 256],
 
-        # VideoMAE config - SQA with self-attention (normal)
+        # VideoMAE config - normal SQA
         'BACKBONE3D': {
             'TYPE': 'videomae',
             'VARIANT': 'base',
@@ -65,10 +67,10 @@ def main():
             'TARGET_CHANNELS': 1024,
             'TARGET_SPATIAL_SIZE': 7,
             'DROPOUT': 0.2,
-            'USE_SELF_ATTENTION': True  # normal SQA
+            'USE_SELF_ATTENTION': True
         },
 
-        # Training
+        # Training - optimized for 3090 24GB
         'epochs': args.epochs,
         'batch_size': args.batch_size,
         'learning_rate': 0.0001,
@@ -105,7 +107,7 @@ def main():
 
         # System
         'num_workers': args.num_workers,
-        'save_dir': f'weights/{args.dataset}_parallel_bstf',
+        'save_dir': f'weights/ava_bstf_topk_{args.top_k}',
         'resume': None,
 
         # Pretrain
@@ -115,10 +117,10 @@ def main():
         'freeze_bb3D': True,
         'pretrain_path': None,
 
-        # Loss config
+        # Loss config - KEY: top_k changed
         'LOSS': {
             'TAL': {
-                'top_k': 10,
+                'top_k': args.top_k,  # <--- ABLATION: 5 or 15
                 'alpha': 1.0,
                 'beta': 6.0,
                 'radius': 2.5,
@@ -136,16 +138,13 @@ def main():
 
     # Print key settings
     print("=" * 60)
-    print("R1-Q5 ABLATION: Parallel BSTF")
+    print(f"R1-Q6 ABLATION: TAL top-k = {args.top_k}")
     print("=" * 60)
-    print(f"  Dataset: {args.dataset}")
-    print(f"  Batch size: {args.batch_size}")
+    print(f"  Dataset: AVA v2.2")
+    print(f"  Batch size: {args.batch_size} x {config['gradient_accumulation']} = {args.batch_size * config['gradient_accumulation']} effective")
     print(f"  Epochs: {args.epochs}")
-    print(f"  Fusion: {config['fusion_module']} (parallel bidirectional)")
-    print(f"  SQA self-attention: {config['BACKBONE3D']['USE_SELF_ATTENTION']}")
+    print(f"  top_k: {args.top_k} (baseline=10)")
     print(f"  LR: {config['lr']}")
-    print(f"  Weight Decay: {config['weight_decay']}")
-    print(f"  Unfreeze Epoch: {config['unfreeze_epoch']}")
     print(f"  Save dir: {config['save_dir']}")
     print("=" * 60)
 
